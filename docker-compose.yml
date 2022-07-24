@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  api:
+    container_name: docker-sql-api
+    build: .
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    restart: on-failure
+    volumes:
+    - apidata:/usr/src/docker-sql-api
+    depends_on:
+      - db
+    networks:
+    - fullstack
+
+  db:
+    image: mysql:5.7
+    container_name: mysql-db
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    environment:
+      - MYSQL_ROOT_HOST=${DB_HOST}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/mysql
+    networks:
+    - fullstack
+
+  db_admin:
+    image: phpmyadmin/phpmyadmin
+    container_name: mysql-db_admin
+    depends_on:
+      - db
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=${DB_USER}
+      - PMA_PORT=${DB_PORT}
+      - PMA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - 9090:80
+    restart: always
+    networks:
+      - fullstack
+
+# Creating volumes to persist data
+
+volumes:
+  dbdata:
+  apidata:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  fullstack:
+    driver: bridge
